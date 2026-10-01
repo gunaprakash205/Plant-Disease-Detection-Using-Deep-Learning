@@ -77,25 +77,37 @@ if uploaded_file is not None:
 
     plant_predictions = predictions[plant_indices]
 
+    plant_predictions = plant_predictions / np.sum(plant_predictions)
+
     predicted_position = np.argmax(plant_predictions)
     predicted_index = plant_indices[predicted_position]
 
-    confidence = predictions[predicted_index]
+    confidence = plant_predictions[predicted_position]
     predicted_class = class_names[predicted_index]
 
     disease = predicted_class.split("___")[1]
 
-    st.success(f"Plant: {selected_plant}")
-    st.success(f"Disease: {disease}")
-    st.info(f"Confidence: {confidence * 100:.2f}%")
+    if confidence < 0.40:
 
-    st.subheader("Predictions")
+        st.warning(
+            f"⚠️ The model is not confident about this {selected_plant} disease "
+            f"({confidence * 100:.2f}%). Please upload a clear leaf image."
+        )
+
+    else:
+
+        st.success(f"Plant: {selected_plant}")
+        st.success(f"Disease: {disease}")
+        st.info(f"Confidence: {confidence * 100:.2f}%")
+
+    st.subheader("Top 3 Predictions")
 
     top_positions = np.argsort(plant_predictions)[-3:][::-1]
 
     for position in top_positions:
+
         index = plant_indices[position]
-        probability = predictions[index]
+        probability = plant_predictions[position]
 
         disease_name = class_names[index].split("___")[1]
 
