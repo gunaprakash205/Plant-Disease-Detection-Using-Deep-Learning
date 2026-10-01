@@ -15,22 +15,40 @@ def load_model():
     return tf.keras.models.load_model("plant_disease_model.keras")
 
 @st.cache_data
-
 def load_class_names():
     with open("class_names.json", "r") as f:
         return json.load(f)
-        
-
-    
 
 model = load_model()
 class_names = load_class_names()
 
 st.title("🌿 Plant Disease Detection")
-st.write("Upload a plant leaf image to detect its disease.")
+st.write("Select a plant and upload its leaf image.")
+
+plants = [
+    "Apple",
+    "Blueberry",
+    "Cherry",
+    "Corn",
+    "Grape",
+    "Orange",
+    "Peach",
+    "Pepper",
+    "Potato",
+    "Raspberry",
+    "Soybean",
+    "Squash",
+    "Strawberry",
+    "Tomato"
+]
+
+selected_plant = st.selectbox(
+    "Select Plant",
+    plants
+)
 
 uploaded_file = st.file_uploader(
-    "Upload a leaf image",
+    "Upload Leaf Image",
     type=["jpg", "jpeg", "png"]
 )
 
@@ -50,25 +68,39 @@ if uploaded_file is not None:
     img_array = img_array / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    predictions = model.predict(img_array, verbose=0)
+    predictions = model.predict(img_array, verbose=0)[0]
 
-    predicted_index = np.argmax(predictions[0])
-    confidence = predictions[0][predicted_index]
+    plant_indices = [
+        i for i, name in enumerate(class_names)
+        if name.startswith(selected_plant + "___")
+    ]
 
+    plant_predictions = predictions[plant_indices]
+
+    predicted_position = np.argmax(plant_predictions)
+    predicted_index = plant_indices[predicted_position]
+
+    confidence = predictions[predicted_index]
     predicted_class = class_names[predicted_index]
 
-    st.success(f"Prediction: {predicted_class}")
+    disease = predicted_class.split("___")[1]
+
+    st.success(f"Plant: {selected_plant}")
+    st.success(f"Disease: {disease}")
     st.info(f"Confidence: {confidence * 100:.2f}%")
 
-    st.subheader("Top 3 Predictions")
+    st.subheader("Predictions")
 
-    top_indices = np.argsort(predictions[0])[-3:][::-1]
+    top_positions = np.argsort(plant_predictions)[-3:][::-1]
 
-    for index in top_indices:
-        probability = predictions[0][index]
+    for position in top_positions:
+        index = plant_indices[position]
+        probability = predictions[index]
+
+        disease_name = class_names[index].split("___")[1]
 
         st.write(
-            f"{class_names[index]}: "
+            f"{disease_name}: "
             f"{probability * 100:.2f}%"
         )
 
