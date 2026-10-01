@@ -16,7 +16,7 @@ def load_model():
 
 @st.cache_data
 def load_class_names():
-    with open("class_names.json", "r") as f:
+    with open("data/class_names.json", "r") as f:
         return json.load(f)
 
 model = load_model()
