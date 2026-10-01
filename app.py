@@ -15,9 +15,11 @@ def load_model():
     return tf.keras.models.load_model("plant_disease_model.keras")
 
 @st.cache_data
+
 def load_class_names():
     with open("data/class_names.json", "r") as f:
         return json.load(f)
+    
 
 model = load_model()
 class_names = load_class_names()
